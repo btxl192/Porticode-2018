@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map-canvas { height: 100% }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7J1zsErb9_7jxNu5KU5kIENFObAQEbl0">
+    </script>
+    <script type="text/javascript">
+      var map;
+	  var markers = [];
+	  //https://developers.google.com/maps/documentation/javascript/directions
+	  var directionsService = new google.maps.DirectionsService();
+      var directionsDisplay = new google.maps.DirectionsRenderer();
+	  var routeMarkers = [];
+      function initialize() 
+	  {
+        var mapOptions = 
+		{
+          center: new google.maps.LatLng(51.507054, -0.127468),
+          zoom: 15
+        };		
+        map = new google.maps.Map(document.getElementById("map-canvas"),
+            mapOptions);
+		
+      }
+      google.maps.event.addDomListener(window, 'load', initialize);
+	 	  
+		  
+	function addmarker(i, j)
+	{
+		clearRoute();
+		var myLatLng = {lat: i, lng: j};
+		var marker = new google.maps.Marker({
+		position: myLatLng,
+		map: map,
+		title: '.'
+		});
+		map.panTo(myLatLng);
+		markers.push(marker);
+		setMarkerMap(map);
+	}
+	
+	function clearmarkers()
+	{
+	    clearRoute();
+		setMarkerMap(null);
+		markers = [];
+		
+	}
+	
+	function clearRoute()
+	{
+		directionsDisplay.setMap(null);
+		routeMarkers = [];
+		setMarkerMap(map);
+	}
+	
+	function setMarkerMap(m)
+	{
+		for (var i = 0; i < markers.length; i++) 
+		{
+          markers[i].setMap(m);
+        }
+	}
+	
+	function addToRoute(i,j)
+	{
+		routeMarkers.push([i,j]);
+	}	
+	
+	function removeLastMarker()
+	{
+		clearRoute();
+		markers[markers.length-1].setMap(null);
+		markers = markers.slice(0,markers.length-1);
+	}
+	
+	function calcRoute() 
+	{
+	  setMarkerMap(null);
+	  directionsDisplay.setMap(map);
+	  //https://stackoverflow.com/questions/36523773/how-to-make-route-direction-between-multiple-markers
+	  //draw a route between all markerss
+	  var marker, i;
+      var request = 
+	  {
+		travelMode: 'WALKING'
+      };
+      for (i = 0; i < routeMarkers.length; i++) 
+	  {
+		marker = new google.maps.Marker
+		(
+			{
+				position: new google.maps.LatLng(routeMarkers[i][0], routeMarkers[i][1]),
+			}
+		);
+
+		if (i == 0) request.origin = marker.getPosition();
+		else if (i == routeMarkers.length - 1) request.destination = marker.getPosition();
+		else 
+		{
+			if (!request.waypoints) request.waypoints = [];
+			request.waypoints.push
+			(
+				{
+					location: marker.getPosition(),
+					stopover: true
+				}
+			);
+		}
+
+	   }
+		directionsService.route(request, function(result, status) 
+		  {
+			if (status == google.maps.DirectionsStatus.OK) 
+			{
+			  directionsDisplay.setDirections(result);
+			}
+		  }
+	  );
+	}
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"/>
+  </body>
+</html>
